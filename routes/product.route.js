@@ -1,5 +1,5 @@
 const express = require('express');
-const { addProduct, updateProduct, getAllProducts } = require('../controllers/product.controller');
+const { addProduct, updateProduct, getAllProducts, getProducts } = require('../controllers/product.controller');
 const { isAuthenticatedUser } = require('../middlewares/auth');
 const upload = require('../middlewares/multerConfig');
 const { authorizeRoles } = require('../utils/Errorhandler');
@@ -26,5 +26,6 @@ productRouter.put('/admin/product/:id',isAuthenticatedUser,authorizeRoles('admin
 );
 
 productRouter.get('/products',getAllProducts);
+productRouter.get('/products/all',getProducts);
 
 module.exports = productRouter;
