@@ -1,7 +1,7 @@
 const asyncErrorHandler = require('../middlewares/asyncErrorHandler');
 const cloudinary = require("cloudinary");
 const Product = require('../models/product.model');
-const {search,filter, pagination} = require('../utils/searchQuery');
+const { search, filter, pagination } = require('../utils/searchQuery');
 
 // Add new product
 const addProduct = asyncErrorHandler(async (req, res, next) => {
@@ -218,33 +218,48 @@ const updateProduct = asyncErrorHandler(async (req, res, next) => {
     }
 })
 
-const getAllProducts =asyncErrorHandler(async(req,res,next)=>{
-     try {
-         const resultsPerPage = 12;
+const getAllProducts = asyncErrorHandler(async (req, res, next) => {
+    try {
+        const resultsPerPage = 12;
         const productsCount = await Product.countDocuments();
 
         let query = Product.find();
 
-        query = search(query,req.query);
+        query = search(query, req.query);
 
-        query = filter(query,req.query);
+        query = filter(query, req.query);
 
         let products = await query;
 
         const filteredProductsCount = products.length;
 
-        query = pagination(query,req.query,resultsPerPage);
+        query = pagination(query, req.query, resultsPerPage);
 
 
         products = await query.clone();
 
         res.status(200).json({
-             products,productsCount,resultsPerPage,filteredProductsCount
+            products, productsCount, resultsPerPage, filteredProductsCount
         })
-     } catch (error) {
+    } catch (error) {
         console.error(error);
-        res.status(400).json("error","error occured");
-     }
+        res.status(400).json("error", "error occured");
+    }
 })
 
-module.exports = { addProduct,updateProduct,getAllProducts };
+
+const getProducts = asyncErrorHandler(async (req, res, next) => {
+    try {
+        const products = await Product.find();
+
+        res.status(200).json({
+            success: true,
+            products
+        })
+    } catch (error) {
+        console.error(error);
+
+    }
+})
+
+module.exports = { addProduct, updateProduct, getAllProducts,getProducts };
