@@ -7,6 +7,7 @@ const bodyParser = require("body-parser");
 const cloudinary = require('cloudinary');
 const productRouter = require("./routes/product.route");
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
 
 const app = express();
@@ -28,6 +29,7 @@ cloudinary.config({
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
+app.use(cors());
 
 
 app.get('/',(req,res)=>{
