@@ -42,24 +42,25 @@ const loginUser = asyncErrorHandler(async (req, res, next) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return next(new ErrorHandler("Please enter email and password", 400))
+            return res.status(401).json({message:"please enter email and password"})
         }
 
         const user = await User.findOne({ email }).select("+password");
 
         if (!user) {
-            return next(new ErrorHandler("User with this email not exists", 401))
+            return res.status(401).json({message:"User with this email not exist"})
         }
 
         const passwordMatch = await user.comparePassword(password);
 
         if (!passwordMatch) {
-            return next(new ErrorHandler("Incorrect password", 401))
+            return res.status(401).json({message:"Incorrect Password"})
         }
 
         sendToken(user, 200, res);
     } catch (error) {
         console.error(error);
+        return next(error);
     }
 });
 
