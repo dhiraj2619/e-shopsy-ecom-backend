@@ -9,7 +9,7 @@ const isAuthenticatedUser =asyncErrorHandler(async(req,res,next)=>{
     console.log(token);
     
     if(!token){
-         return next(new ErrorHandler("Please login to access",401));
+        return res.status(401).json({success:false,message:"Please login to access"});
     }
 
     const decoded = jwt.verify(token,process.env.JWT_SECRET);
