@@ -10,7 +10,7 @@ const userRouter = express.Router();
 userRouter.post("/register", upload.single("avatar"), userController.registerUser);
 userRouter.post("/login",userController.loginUser);
 userRouter.get("/logout",userController.logoutUser);
-userRouter.get('/mydetail',isAuthenticatedUser,userController.getUserDetails);
+userRouter.get('/me',isAuthenticatedUser,userController.getUserDetails);
 userRouter.post('/password/forgot',userController.forgotPassword);
 
 userRouter.put('/admin/user/:id',isAuthenticatedUser,userController.updateUserRole);
