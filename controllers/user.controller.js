@@ -173,4 +173,35 @@ const updateUserRole=asyncErrorHandler(async(req,res,next)=>{
      }
 })
 
+
+const updateUserProfile=asyncErrorHandler(async(req,res,next)=>{
+    try {
+          const {name,email,gender} = req.body;
+
+          const newFormData = {name,email,gender};
+
+
+          if(req.file){
+             const user = await User.findById(req.user.id);
+
+             if(!user){
+                 return res.status(400).json({success:false,message:"user not found"});
+             }
+
+             if(user.avatar && user.avatar.public_id){
+                 await cloudinary.v2.uploader.destroy(user.avatar.public_id)
+             }
+
+
+             const cloud = await cloudinary.v2.uploader.upload(req.file.path,{
+                folder:"avatars",
+                width:"150",
+                crop:"scale"
+             })
+          }
+    } catch (error) {
+        
+    }
+})
+
 module.exports = { registerUser, loginUser, logoutUser, getUserDetails,forgotPassword,updateUserRole };
