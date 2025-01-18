@@ -185,9 +185,7 @@ const updateUserProfile = asyncErrorHandler(async (req, res, next) => {
       const user = await User.findById(req.user.id);
 
       if (!user) {
-        return res
-          .status(400)
-          .json({ success: false, message: "user not found" });
+        return res.status(400).json({ success: false, message: "user not found" });
       }
 
       if (user.avatar && user.avatar.public_id) {
@@ -218,6 +216,11 @@ const updateUserProfile = asyncErrorHandler(async (req, res, next) => {
         message: "cannot update user",
       });
     }
+
+    res.status(200).json({success:true,
+        message:"profile updated successfully",
+        user:updatedUser
+    })
   } catch (error) {
     console.error("Error in updateProfile:", error);
     res
