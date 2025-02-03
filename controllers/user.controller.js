@@ -2,6 +2,7 @@ const User = require("../models/user.model");
 const cloudinary = require("cloudinary");
 const sendToken = require("../utils/sendToken");
 const ErrorHandler = require("../utils/Errorhandler");
+const fs = require("fs");
 const asyncErrorHandler = require("../middlewares/asyncErrorHandler");
 const nodemailer = require("nodemailer");
 
@@ -178,58 +179,49 @@ const updateUserRole = asyncErrorHandler(async (req, res, next) => {
 const updateUserProfile = asyncErrorHandler(async (req, res, next) => {
   try {
     const { name, email, gender } = req.body;
-    const newUserData = { name, email, gender };
+    const user = await User.findById(req.user.id);
 
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Update name, email, and gender if provided
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (gender) user.gender = gender;
+
+    // Handle avatar update
     if (req.file) {
-      const user = await User.findById(req.user.id);
-
-      if (!user) {
-        return res.status(400).json({ success: false, message: "User not found" });
-      }
-
       // Delete old avatar from Cloudinary if it exists
       if (user.avatar && user.avatar.public_id) {
         await cloudinary.v2.uploader.destroy(user.avatar.public_id);
       }
 
-      // Upload new avatar from the local uploads folder
-      const filePath = path.join(__dirname, "..", "uploads", req.file.filename);
-      const myCloud = await cloudinary.v2.uploader.upload(filePath, {
+      // Upload new avatar from local folder
+      const myCloud = await cloudinary.v2.uploader.upload(req.file.path, {
         folder: "avatars",
-        width: "150",
+        width: 150,
         crop: "scale",
       });
 
-      // Delete local file after uploading to Cloudinary
-      fs.unlinkSync(filePath);
+      // Delete local file after Cloudinary upload
+      fs.unlinkSync(req.file.path);
 
-      newUserData.avatar = {
+      user.avatar = {
         public_id: myCloud.public_id,
         url: myCloud.secure_url,
       };
     }
 
-    // Update user
-    const updatedUser = await User.findByIdAndUpdate(req.user.id, newUserData, {
-      new: true,
-      runValidators: true,
-      useFindAndModify: false,
-    });
-
-    if (!updatedUser) {
-      return res.status(401).json({
-        success: false,
-        message: "Cannot update user",
-      });
-    }
+    await user.save();
 
     res.status(200).json({
       success: true,
       message: "Profile updated successfully",
-      user: updatedUser,
+      user,
     });
   } catch (error) {
-    console.error("Error in updateProfile:", error);
+    console.error("Error in updateUserProfile:", error);
     res.status(500).json({
       success: false,
       message: "An error occurred",
