@@ -178,25 +178,30 @@ const updateUserRole = asyncErrorHandler(async (req, res, next) => {
 const updateUserProfile = asyncErrorHandler(async (req, res, next) => {
   try {
     const { name, email, gender } = req.body;
-
     const newUserData = { name, email, gender };
 
     if (req.file) {
       const user = await User.findById(req.user.id);
 
       if (!user) {
-        return res.status(400).json({ success: false, message: "user not found" });
+        return res.status(400).json({ success: false, message: "User not found" });
       }
 
+      // Delete old avatar from Cloudinary if it exists
       if (user.avatar && user.avatar.public_id) {
         await cloudinary.v2.uploader.destroy(user.avatar.public_id);
       }
 
-      const myCloud = await cloudinary.v2.uploader.upload(req.file.path, {
+      // Upload new avatar from the local uploads folder
+      const filePath = path.join(__dirname, "..", "uploads", req.file.filename);
+      const myCloud = await cloudinary.v2.uploader.upload(filePath, {
         folder: "avatars",
         width: "150",
         crop: "scale",
       });
+
+      // Delete local file after uploading to Cloudinary
+      fs.unlinkSync(filePath);
 
       newUserData.avatar = {
         public_id: myCloud.public_id,
@@ -204,6 +209,7 @@ const updateUserProfile = asyncErrorHandler(async (req, res, next) => {
       };
     }
 
+    // Update user
     const updatedUser = await User.findByIdAndUpdate(req.user.id, newUserData, {
       new: true,
       runValidators: true,
@@ -213,25 +219,25 @@ const updateUserProfile = asyncErrorHandler(async (req, res, next) => {
     if (!updatedUser) {
       return res.status(401).json({
         success: false,
-        message: "cannot update user",
+        message: "Cannot update user",
       });
     }
 
-    res.status(200).json({success:true,
-        message:"profile updated successfully",
-        user:updatedUser
-    })
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
   } catch (error) {
     console.error("Error in updateProfile:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "An error occurred",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "An error occurred",
+      error: error.message,
+    });
   }
 });
+
 
 module.exports = {
   registerUser,
